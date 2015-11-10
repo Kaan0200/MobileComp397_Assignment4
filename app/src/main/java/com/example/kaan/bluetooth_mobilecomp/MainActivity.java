@@ -16,6 +16,8 @@ import android.widget.Button;
 import android.widget.Spinner;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.UUID;
@@ -25,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothAdapter mBluetoothAdapter;
     private Button refreshBluetoothDevicesButton;
     private Button startButton;
+    private Button resetFileButton;
     private Spinner selectedDeviceSpinner;
     public final UUID myUUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
 
@@ -48,18 +51,22 @@ public class MainActivity extends AppCompatActivity {
         //button to refresh bluetooth devices
         refreshBluetoothDevicesButton = (Button) findViewById(R.id.devicesButton);
         refreshBluetoothDevicesButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
+                    public void onClick(View v) {
                 refreshPairedListSpinner(v);
             }
         });
         startButton = (Button) findViewById(R.id.startButton);
         startButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                ConnectToSelectedDevice();
+                connectToSelectedDevice(v);
             }
         });
-
-
+        resetFileButton = (Button) findViewById(R.id.resetFileButton);
+        startButton.setOnClickListener(new View.OnClickListener() {
+                                           public void onClick(View v) {
+                                                resetDataFile(v);
+                                           }
+                                       });
         //get the blue tooth adapter
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     }
@@ -114,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //
-    public void ConnectToSelectedDevice() {
+    public void connectToSelectedDevice(View v) {
         BluetoothDevice selectedDevice = null;
         if (mBluetoothAdapter != null) {
             Set<BluetoothDevice> devices = mBluetoothAdapter.getBondedDevices();
@@ -123,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
             String selectedString = selectedDeviceSpinner.getSelectedItem().toString();
 
             for (BluetoothDevice d : devices) {
-                if (d.getName() == selectedString) {
+                if (d.getName().equals(selectedString)) {
                     selectedDevice = d;
                 }
                 // otherwise skip
@@ -161,14 +168,21 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void resetDataFile(View v){
+        //TODO
+    }
+
 
     private class ConnectThread extends Thread {
         private final BluetoothSocket mSocket;
-        private final BluetoothDevice mDevice;
+
+        private final InputStream mmInputStream;
+        private final OutputStream mmOutputStream;
 
         public ConnectThread(BluetoothDevice device) {
-            mDevice = device;
             BluetoothSocket tempSocket = null;
+            InputStream tmpIn = null;
+            OutputStream tmpOut = null;
 
             try {
                 tempSocket = device.createRfcommSocketToServiceRecord(myUUID);
@@ -176,6 +190,15 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
             mSocket = tempSocket;
+
+            try {
+                tmpIn = mSocket.getInputStream();
+                tmpOut = mSocket.getOutputStream();
+            } catch (IOException e){
+                e.printStackTrace();
+            }
+            mmInputStream = tmpIn;
+            mmOutputStream = tmpOut;
         }
 
         @Override
@@ -189,6 +212,23 @@ public class MainActivity extends AppCompatActivity {
                     mSocket.close();
                 } catch (IOException ee ){
                     return;
+                }
+            }
+
+            byte[] buffer = new byte[1024];  // buffer store for the stream
+            int bytes; // bytes returned from read()
+
+            // Keep listening to the InputStream until an exception occurs
+            while (true) {
+                try {
+                    // Read from the InputStream
+                    bytes = mmInputStream.read(buffer);
+
+                    // write to file
+
+
+                } catch (IOException e) {
+                    break;
                 }
             }
         }
