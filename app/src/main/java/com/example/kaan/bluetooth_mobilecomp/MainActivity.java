@@ -9,12 +9,17 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
+import android.widget.TextView;
+
+import org.w3c.dom.Text;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -30,10 +35,14 @@ import java.util.UUID;
 public class MainActivity extends AppCompatActivity {
 
     private BluetoothAdapter mBluetoothAdapter;
+
+    private TextView commandTextView;
     private Button refreshBluetoothDevicesButton;
     private Button startConnectionButton;
     private Button resetFileButton;
+    private Button sendCommandButton;
     private Spinner selectedDeviceSpinner;
+
     public final UUID myUUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
     private String outputFileName = "Assignment4Datadump.txr";
     private File outputFile;
@@ -55,14 +64,36 @@ public class MainActivity extends AppCompatActivity {
         });
 
         selectedDeviceSpinner = (Spinner) findViewById(R.id.spinner);
+        commandTextView = (TextView) findViewById(R.id.commandText);
         startConnectionButton = (Button) findViewById(R.id.startButton);
         resetFileButton = (Button) findViewById(R.id.resetFileButton);
         refreshBluetoothDevicesButton = (Button) findViewById(R.id.devicesButton);
+        sendCommandButton = (Button) findViewById(R.id.sendButton);
 
         //button to refresh bluetooth devices
+        commandTextView.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                if (commandTextView.getText().equals("")){
+                    sendCommandButton.setEnabled(false);
+                } else {
+                    sendCommandButton.setEnabled(true);
+                }
+            }
+        });
 
         refreshBluetoothDevicesButton.setOnClickListener(new View.OnClickListener() {
-                    public void onClick(View v) {
+            public void onClick(View v) {
                 refreshPairedListSpinner(v);
             }
         });
@@ -72,10 +103,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         resetFileButton.setOnClickListener(new View.OnClickListener() {
-                                           public void onClick(View v) {
-                                                resetDataFile(v);
-                                           }
-                                       });
+            public void onClick(View v) {
+                resetDataFile(v);
+            }
+        });
+        sendCommandButton.setOnClickListener(new View.OnClickListener(){
+            public void onClick(View v) {
+                sendCommand(v);
+            }
+        });
         //get the blue tooth adapter
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     }
@@ -186,6 +222,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private boolean sendCommand(View v) {
+        //new ConnectThread(selectedDevice).run();
+        return false;
+    }
 
     private class ConnectThread extends Thread {
         private final BluetoothSocket mSocket;
@@ -222,9 +262,6 @@ public class MainActivity extends AppCompatActivity {
             try {
                 mSocket.connect();
 
-                // start the exchange
-                mmOutputStream.write("start".getBytes());
-                
             } catch (IOException e) {
                 try {
                     mSocket.close();
