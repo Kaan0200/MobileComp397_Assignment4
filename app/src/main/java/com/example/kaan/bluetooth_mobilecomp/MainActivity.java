@@ -26,7 +26,7 @@ public class MainActivity extends AppCompatActivity {
 
     private BluetoothAdapter mBluetoothAdapter;
     private Button refreshBluetoothDevicesButton;
-    private Button startButton;
+    private Button startConnectionButton;
     private Button resetFileButton;
     private Spinner selectedDeviceSpinner;
     public final UUID myUUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
@@ -48,21 +48,23 @@ public class MainActivity extends AppCompatActivity {
         });
 
         selectedDeviceSpinner = (Spinner) findViewById(R.id.spinner);
-        //button to refresh bluetooth devices
+        startConnectionButton = (Button) findViewById(R.id.startButton);
+        resetFileButton = (Button) findViewById(R.id.resetFileButton);
         refreshBluetoothDevicesButton = (Button) findViewById(R.id.devicesButton);
+
+        //button to refresh bluetooth devices
+
         refreshBluetoothDevicesButton.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
                 refreshPairedListSpinner(v);
             }
         });
-        startButton = (Button) findViewById(R.id.startButton);
-        startButton.setOnClickListener(new View.OnClickListener() {
+        startConnectionButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 connectToSelectedDevice(v);
             }
         });
-        resetFileButton = (Button) findViewById(R.id.resetFileButton);
-        startButton.setOnClickListener(new View.OnClickListener() {
+        resetFileButton.setOnClickListener(new View.OnClickListener() {
                                            public void onClick(View v) {
                                                 resetDataFile(v);
                                            }
