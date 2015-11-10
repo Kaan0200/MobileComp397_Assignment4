@@ -31,25 +31,20 @@ public class BluetoothService {
 
     // fields
     private final BluetoothAdapter mAdapter;
-    private final Handler mHandler;
     private AcceptThread mAcceptThread;
     private ConnectThread mConnectThread;
     private ConnectedThread mConnectedThread;
     private connectionState mState;
 
     //constructor
-    public BluetoothService(Context context, Handler handler){
+    public BluetoothService(Context context){
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         mState = connectionState.NONE;
-        mHandler = handler;
     }
 
     private synchronized void setState(connectionState state) {
         Log.d(TAG, "setState() " + mState + " -> " + state);
         mState = state;
-
-        // Give the new state to the Handler so the UI Activity can update
-        mHandler.obtainMessage(Constants.MESSAGE_STATE_CHANGE, state.ordinal(), -1).sendToTarget();
     }
 
     public synchronized void start() {
@@ -133,11 +128,8 @@ public class BluetoothService {
         mConnectedThread.start();
 
         // Send the name of the connected device back to the UI Activity
-        Message msg = mHandler.obtainMessage(Constants.MESSAGE_DEVICE_NAME);
         Bundle bundle = new Bundle();
         bundle.putString(Constants.DEVICE_NAME, device.getName());
-        msg.setData(bundle);
-        mHandler.sendMessage(msg);
 
         setState(connectionState.CONNECTED);
     }
@@ -188,11 +180,8 @@ public class BluetoothService {
      */
     private void connectionFailed() {
         // Send a failure message back to the Activity
-        Message msg = mHandler.obtainMessage(Constants.MESSAGE_TOAST);
         Bundle bundle = new Bundle();
         bundle.putString(Constants.TOAST, "Unable to connect device");
-        msg.setData(bundle);
-        mHandler.sendMessage(msg);
 
         // Start the service over to restart listening mode
         BluetoothService.this.start();
@@ -203,11 +192,8 @@ public class BluetoothService {
      */
     private void connectionLost() {
         // Send a failure message back to the Activity
-        Message msg = mHandler.obtainMessage(Constants.MESSAGE_TOAST);
         Bundle bundle = new Bundle();
         bundle.putString(Constants.TOAST, "Device connection was lost");
-        msg.setData(bundle);
-        mHandler.sendMessage(msg);
 
         // Start the service over to restart listening mode
         BluetoothService.this.start();
@@ -423,9 +409,6 @@ public class BluetoothService {
             try {
                 mmOutStream.write(buffer);
 
-                // Share the sent message back to the UI Activity
-                mHandler.obtainMessage(Constants.MESSAGE_WRITE, -1, -1, buffer)
-                        .sendToTarget();
             } catch (IOException e) {
                 Log.e(TAG, "Exception during write", e);
             }

@@ -11,6 +11,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -116,6 +117,15 @@ private String outputFileName = "Assignment4Datadump.csv";
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     }
 
+    @Override public void onStart() {
+        super.onStart();
+
+        if (mBluetoothService == null) {
+            mBluetoothService = new BluetoothService(this);
+
+        }
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -204,8 +214,9 @@ private String outputFileName = "Assignment4Datadump.csv";
         }
     }
 
-    private boolean sendCommand(View v) {
+    private void sendCommand(View v) {
         mBluetoothService.write(commandTextView.getText().toString().getBytes());
-        return false;
+        Log.d("YO", "SENDING");
+        commandTextView.setText("");
     }
 }
