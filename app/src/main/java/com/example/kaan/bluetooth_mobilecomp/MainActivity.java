@@ -96,16 +96,19 @@ private String outputFileName = "Assignment4Datadump.csv";
         refreshBluetoothDevicesButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 refreshPairedListSpinner(v);
+                startConnectionButton.setEnabled(true);
             }
         });
         startConnectionButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 connectToSelectedDevice(v);
+                resetFileButton.setEnabled(true);
             }
         });
         resetFileButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 resetDataFile(v);
+                sendCommandButton.setEnabled(true);
             }
         });
         sendCommandButton.setOnClickListener(new View.OnClickListener(){
@@ -113,6 +116,9 @@ private String outputFileName = "Assignment4Datadump.csv";
                 sendCommand(v);
             }
         });
+        startConnectionButton.setEnabled(false);
+        resetFileButton.setEnabled(false);
+        sendCommandButton.setEnabled(false);
         //get the blue tooth adapter
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     }
