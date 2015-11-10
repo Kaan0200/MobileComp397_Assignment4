@@ -1,6 +1,8 @@
 package com.example.kaan.bluetooth_mobilecomp;
 
+import android.app.AlertDialog;
 import android.bluetooth.*;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -102,16 +104,28 @@ public class MainActivity extends AppCompatActivity {
 
     public void refreshPairedListSpinner(View v) {
         // get all the unique blue tooth devices
-        Set<BluetoothDevice> devices = mBluetoothAdapter.getBondedDevices();
+        if (mBluetoothAdapter != null) {
+            Set<BluetoothDevice> devices = mBluetoothAdapter.getBondedDevices();
 
-        ArrayList<Device> convertList = new ArrayList<>();
-        // convert all bluetooth devices into devices for the spinner
-        for(BluetoothDevice d : devices) {
-            convertList.add(new Device(d.getName(), d.getAddress()));
+            ArrayList<Device> convertList = new ArrayList<>();
+            // convert all bluetooth devices into devices for the spinner
+            for(BluetoothDevice d : devices) {
+                convertList.add(new Device(d.getName(), d.getAddress()));
+            }
+
+            // populate spinner
+            DeviceAdapter adapter = new DeviceAdapter(this, convertList);
+            selectedDeviceSpinner.setAdapter(adapter);
+        } else {
+            new AlertDialog.Builder(this)
+                    .setTitle("No Bluetooth Adapter")
+                    .setMessage("Unable to get list of bonded devices")
+                    .setNeutralButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            // nothing
+                        }
+                    }).show();
         }
-
-        // populate spinner
-        DeviceAdapter adapter = new DeviceAdapter(this, convertList);
-        selectedDeviceSpinner.setAdapter(adapter);
     }
 }
