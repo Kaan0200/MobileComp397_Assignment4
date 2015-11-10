@@ -29,9 +29,18 @@
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Refresh List"
+        android:text="Refresh"
         android:id="@+id/devicesButton"
+        android:clickable="false"
         android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:clickable="false" />
+        android:layout_alignParentEnd="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Start on Selected Device"
+        android:id="@+id/startButton"
+        android:layout_below="@+id/spinner"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true" />
 </RelativeLayout>

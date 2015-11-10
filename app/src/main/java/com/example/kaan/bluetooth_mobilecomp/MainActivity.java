@@ -22,6 +22,7 @@ public class MainActivity extends AppCompatActivity {
 
     private BluetoothAdapter mBluetoothAdapter;
     private Button refreshBluetoothDevicesButton;
+    private Button startButton;
     private Spinner selectedDeviceSpinner;
 
     @Override
@@ -48,6 +49,13 @@ public class MainActivity extends AppCompatActivity {
                 refreshPairedListSpinner(v);
             }
         });
+        startButton = (Button) findViewById(R.id.startButton);
+        startButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v){
+                ConnectToSelectedDevice();
+            }
+        });
+
 
         //get the blue tooth adapter
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -102,19 +110,39 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //
+    public void ConnectToSelectedDevice(){
+        if (mBluetoothAdapter != null) {
+            Set<BluetoothDevice> devices = mBluetoothAdapter.getBondedDevices();
+
+            // get the bluetooth device that is the selected string
+            String selectedString = selectedDeviceSpinner.getSelectedItem().toString();
+            BluetoothDevice selectedDevice;
+            for (BluetoothDevice d : devices) {
+                if (d.getName() == selectedString){
+                    selectedDevice = d;
+                }
+                // otherwise skip
+            }
+
+
+        }
+    }
+
+    // button to refresh the spinner with the selection of devices for bluetooth
     public void refreshPairedListSpinner(View v) {
         // get all the unique blue tooth devices
         if (mBluetoothAdapter != null) {
             Set<BluetoothDevice> devices = mBluetoothAdapter.getBondedDevices();
 
-            ArrayList<Device> convertList = new ArrayList<>();
+            ArrayList<String> convertList = new ArrayList<>();
             // convert all bluetooth devices into devices for the spinner
             for(BluetoothDevice d : devices) {
-                convertList.add(new Device(d.getName(), d.getAddress()));
+                convertList.add(d.getName());
             }
 
             // populate spinner
-            DeviceAdapter adapter = new DeviceAdapter(this, convertList);
+            ArrayAdapter<String> adapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item,convertList);
             selectedDeviceSpinner.setAdapter(adapter);
         } else {
             new AlertDialog.Builder(this)
