@@ -15,8 +15,10 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -24,6 +26,7 @@ public class MainActivity extends AppCompatActivity {
     private Button refreshBluetoothDevicesButton;
     private Button startButton;
     private Spinner selectedDeviceSpinner;
+    public final UUID myUUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,13 +48,13 @@ public class MainActivity extends AppCompatActivity {
         //button to refresh bluetooth devices
         refreshBluetoothDevicesButton = (Button) findViewById(R.id.devicesButton);
         refreshBluetoothDevicesButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v){
+            public void onClick(View v) {
                 refreshPairedListSpinner(v);
             }
         });
         startButton = (Button) findViewById(R.id.startButton);
         startButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v){
+            public void onClick(View v) {
                 ConnectToSelectedDevice();
             }
         });
@@ -84,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onDestroy(){
+    public void onDestroy() {
         super.onDestroy();
 
         if (mBluetoothAdapter != null) {
@@ -92,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void doDiscover(){
+    private void doDiscover() {
 
         // indicate that we are now scanning
 
@@ -111,21 +114,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //
-    public void ConnectToSelectedDevice(){
+    public void ConnectToSelectedDevice() {
+        BluetoothDevice selectedDevice = null;
         if (mBluetoothAdapter != null) {
             Set<BluetoothDevice> devices = mBluetoothAdapter.getBondedDevices();
 
             // get the bluetooth device that is the selected string
             String selectedString = selectedDeviceSpinner.getSelectedItem().toString();
-            BluetoothDevice selectedDevice;
+
             for (BluetoothDevice d : devices) {
-                if (d.getName() == selectedString){
+                if (d.getName() == selectedString) {
                     selectedDevice = d;
                 }
                 // otherwise skip
             }
-
-
+            // do run
+            new ConnectThread(selectedDevice).run();
         }
     }
 
@@ -137,12 +141,12 @@ public class MainActivity extends AppCompatActivity {
 
             ArrayList<String> convertList = new ArrayList<>();
             // convert all bluetooth devices into devices for the spinner
-            for(BluetoothDevice d : devices) {
+            for (BluetoothDevice d : devices) {
                 convertList.add(d.getName());
             }
 
             // populate spinner
-            ArrayAdapter<String> adapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item,convertList);
+            ArrayAdapter<String> adapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item, convertList);
             selectedDeviceSpinner.setAdapter(adapter);
         } else {
             new AlertDialog.Builder(this)
@@ -154,6 +158,47 @@ public class MainActivity extends AppCompatActivity {
                             // nothing
                         }
                     }).show();
+        }
+    }
+
+
+    private class ConnectThread extends Thread {
+        private final BluetoothSocket mSocket;
+        private final BluetoothDevice mDevice;
+
+        public ConnectThread(BluetoothDevice device) {
+            mDevice = device;
+            BluetoothSocket tempSocket = null;
+
+            try {
+                tempSocket = device.createRfcommSocketToServiceRecord(myUUID);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            mSocket = tempSocket;
+        }
+
+        @Override
+        public void run() {
+            // turn off
+            mBluetoothAdapter.cancelDiscovery();
+            try {
+                mSocket.connect();
+            } catch (IOException e) {
+                try {
+                    mSocket.close();
+                } catch (IOException ee ){
+                    return;
+                }
+            }
+        }
+
+        public void cancel() {
+            try {
+                mSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
