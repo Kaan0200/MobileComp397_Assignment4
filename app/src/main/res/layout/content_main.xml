@@ -23,7 +23,8 @@
         android:layout_height="wrap_content"
         android:id="@+id/spinner"
         android:layout_below="@+id/devicesButton"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:layout_alignEnd="@+id/textView" />
 
     <Button
         style="?android:attr/buttonStyleSmall"
@@ -40,10 +41,9 @@
         android:layout_height="wrap_content"
         android:text="Start on Selected Device"
         android:id="@+id/startButton"
-        android:layout_below="@+id/spinner"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentEnd="true"
-        android:clickable="true" />
+        android:clickable="true"
+        android:layout_alignTop="@+id/spinner"
+        android:layout_toEndOf="@+id/spinner" />
 
     <Button
         android:layout_width="wrap_content"
