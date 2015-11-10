@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.bluetooth.*;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -15,9 +16,13 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.UUID;
@@ -30,6 +35,8 @@ public class MainActivity extends AppCompatActivity {
     private Button resetFileButton;
     private Spinner selectedDeviceSpinner;
     public final UUID myUUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
+    private String outputFileName = "Assignment4Datadump.txr";
+    private File outputFile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -171,7 +178,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void resetDataFile(View v){
-        //TODO
+        try {
+            outputFile = new File(Environment.getExternalStoragePublicDirectory("DIRECTORY_RINGTONES"), outputFileName);
+            outputFile.createNewFile();
+        } catch (IOException e){
+            e.printStackTrace();
+        }
     }
 
 
@@ -209,6 +221,10 @@ public class MainActivity extends AppCompatActivity {
             mBluetoothAdapter.cancelDiscovery();
             try {
                 mSocket.connect();
+
+                // start the exchange
+                mmOutputStream.write("start".getBytes());
+                
             } catch (IOException e) {
                 try {
                     mSocket.close();
@@ -226,8 +242,10 @@ public class MainActivity extends AppCompatActivity {
                     // Read from the InputStream
                     bytes = mmInputStream.read(buffer);
 
-                    // write to file
+                    FileWriter fw = new FileWriter(outputFile.getAbsoluteFile());
+                    BufferedWriter bw = new BufferedWriter(fw);
 
+                    bw.write(bytes);
 
                 } catch (IOException e) {
                     break;
