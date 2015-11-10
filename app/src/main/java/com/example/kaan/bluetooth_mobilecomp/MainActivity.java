@@ -34,7 +34,8 @@ import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
-    private BluetoothAdapter mBluetoothAdapter;
+    private BluetoothService mBluetoothService = null;
+    private BluetoothAdapter mBluetoothAdapter = null;
 
     private TextView commandTextView;
     private Button refreshBluetoothDevicesButton;
@@ -43,8 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private Button sendCommandButton;
     private Spinner selectedDeviceSpinner;
 
-    public final UUID myUUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
-    private String outputFileName = "Assignment4Datadump.txr";
+private String outputFileName = "Assignment4Datadump.csv";
     private File outputFile;
 
     @Override
@@ -141,32 +141,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-
-        if (mBluetoothAdapter != null) {
-            mBluetoothAdapter.cancelDiscovery();
-        }
-    }
-
-    private void doDiscover() {
-
-        // indicate that we are now scanning
-
-        // check if discovering, stop if is
-        if (mBluetoothAdapter.isDiscovering()) {
-            mBluetoothAdapter.cancelDiscovery();
-        }
-        // start up
-        mBluetoothAdapter.startDiscovery();
-    }
-
-    public void BluetoothOn(View v) {
-        if (!mBluetoothAdapter.isEnabled()) {
-
+        if (mBluetoothService != null) {
+            mBluetoothService.stop();
         }
     }
 
     //
     public void connectToSelectedDevice(View v) {
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         BluetoothDevice selectedDevice = null;
         if (mBluetoothAdapter != null) {
             Set<BluetoothDevice> devices = mBluetoothAdapter.getBondedDevices();
@@ -179,9 +161,9 @@ public class MainActivity extends AppCompatActivity {
                     selectedDevice = d;
                 }
                 // otherwise skip
-            }
+        }
             // do run
-            new ConnectThread(selectedDevice).run();
+            mBluetoothService.connect(selectedDevice);
         }
     }
 
@@ -223,79 +205,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean sendCommand(View v) {
-        //new ConnectThread(selectedDevice).run();
+        mBluetoothService.write(commandTextView.getText().toString().getBytes());
         return false;
-    }
-
-    private class ConnectThread extends Thread {
-        private final BluetoothSocket mSocket;
-
-        private final InputStream mmInputStream;
-        private final OutputStream mmOutputStream;
-
-        public ConnectThread(BluetoothDevice device) {
-            BluetoothSocket tempSocket = null;
-            InputStream tmpIn = null;
-            OutputStream tmpOut = null;
-
-            try {
-                tempSocket = device.createRfcommSocketToServiceRecord(myUUID);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            mSocket = tempSocket;
-
-            try {
-                tmpIn = mSocket.getInputStream();
-                tmpOut = mSocket.getOutputStream();
-            } catch (IOException e){
-                e.printStackTrace();
-            }
-            mmInputStream = tmpIn;
-            mmOutputStream = tmpOut;
-        }
-
-        @Override
-        public void run() {
-            // turn off
-            mBluetoothAdapter.cancelDiscovery();
-            try {
-                mSocket.connect();
-
-            } catch (IOException e) {
-                try {
-                    mSocket.close();
-                } catch (IOException ee ){
-                    return;
-                }
-            }
-
-            byte[] buffer = new byte[1024];  // buffer store for the stream
-            int bytes; // bytes returned from read()
-
-            // Keep listening to the InputStream until an exception occurs
-            while (true) {
-                try {
-                    // Read from the InputStream
-                    bytes = mmInputStream.read(buffer);
-
-                    FileWriter fw = new FileWriter(outputFile.getAbsoluteFile());
-                    BufferedWriter bw = new BufferedWriter(fw);
-
-                    bw.write(bytes);
-
-                } catch (IOException e) {
-                    break;
-                }
-            }
-        }
-
-        public void cancel() {
-            try {
-                mSocket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 }
