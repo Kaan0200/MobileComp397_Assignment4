@@ -379,23 +379,25 @@ public class BluetoothService {
 
             // Keep listening to the InputStream while connected
             while (true) {
-                try {
-                    // Read from the InputStream
-                    bytes = mmInStream.read(buffer);
+                while (true) {
+                    try {
+                        // Read from the InputStream
+                        bytes = mmInStream.read(buffer);
 
-                    // Send the obtained bytes to the writing file
-                    File file = new File(Environment.getExternalStoragePublicDirectory("DIRECTORY_RINGTONES"), "Assignment4Datadump.csv");
-                    FileWriter fw = new FileWriter(file.getAbsoluteFile());
-                    BufferedWriter bw = new BufferedWriter(fw);
+                        // Send the obtained bytes to the writing file
+                        File file = new File(Environment.getExternalStoragePublicDirectory("DIRECTORY_RINGTONES"), "Assignment4Datadump.csv");
+                        FileWriter fw = new FileWriter(file.getAbsoluteFile());
+                        BufferedWriter bw = new BufferedWriter(fw);
 
-                    bw.write(bytes);
+                        bw.write(bytes);
 
-                } catch (IOException e) {
-                    Log.e(TAG, "disconnected", e);
-                    connectionLost();
-                    // Start the service over to restart listening mode
-                    BluetoothService.this.start();
-                    break;
+                    } catch (IOException e) {
+                        Log.e(TAG, "disconnected", e);
+                        connectionLost();
+                        // Start the service over to restart listening mode
+                        BluetoothService.this.start();
+                        break;
+                    }
                 }
             }
         }
