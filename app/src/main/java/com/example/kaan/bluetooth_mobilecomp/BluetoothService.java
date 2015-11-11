@@ -31,7 +31,6 @@ public class BluetoothService {
 
     // fields
     private final BluetoothAdapter mAdapter;
-    private AcceptThread mAcceptThread;
     private ConnectThread mConnectThread;
     private ConnectedThread mConnectedThread;
     private connectionState mState;
@@ -60,14 +59,6 @@ public class BluetoothService {
         if (mConnectedThread != null) {
             mConnectedThread.cancel();
             mConnectedThread = null;
-        }
-
-        setState(connectionState.LISTEN);
-
-        // Start the thread to listen on a BluetoothServerSocket
-        if (mAcceptThread == null) {
-            mAcceptThread = new AcceptThread(true);
-            mAcceptThread.start();
         }
     }
 
@@ -117,12 +108,6 @@ public class BluetoothService {
             mConnectedThread = null;
         }
 
-        // Cancel the accept thread because we only want to connect to one device
-        if (mAcceptThread != null) {
-            mAcceptThread.cancel();
-            mAcceptThread = null;
-        }
-
         // Start the thread to manage the connection and perform transmissions
         mConnectedThread = new ConnectedThread(socket, socketType);
         mConnectedThread.start();
@@ -150,10 +135,6 @@ public class BluetoothService {
             mConnectedThread = null;
         }
 
-        if (mAcceptThread != null) {
-            mAcceptThread.cancel();
-            mAcceptThread = null;
-        }
         setState(connectionState.NONE);
     }
 
@@ -198,85 +179,6 @@ public class BluetoothService {
         // Start the service over to restart listening mode
         BluetoothService.this.start();
     }
-
-    /**
-     * This thread runs while listening for incoming connections. It behaves
-     * like a server-side client. It runs until a connection is accepted
-     * (or until cancelled).
-     */
-    private class AcceptThread extends Thread {
-        // The local server socket
-        private final BluetoothServerSocket mmServerSocket;
-        private String mSocketType;
-
-        public AcceptThread(boolean secure) {
-            BluetoothServerSocket tmp = null;
-            mSocketType = secure ? "Secure" : "Insecure";
-
-            // Create a new listening server socket
-            try {
-                tmp = mAdapter.listenUsingRfcommWithServiceRecord("BluetoothService", myUUID);
-            } catch (IOException e) {
-                Log.e(TAG, "Socket Type: " + mSocketType + "listen() failed", e);
-            }
-            mmServerSocket = tmp;
-        }
-
-        public void run() {
-            Log.d(TAG, "Socket Type: " + mSocketType +
-                    "BEGIN mAcceptThread" + this);
-            setName("AcceptThread" + mSocketType);
-
-            BluetoothSocket socket = null;
-
-            // Listen to the server socket if we're not connected
-            while (mState != connectionState.CONNECTED) {
-                try {
-                    // This is a blocking call and will only return on a
-                    // successful connection or an exception
-                    socket = mmServerSocket.accept();
-                } catch (IOException e) {
-                    Log.e(TAG, "Socket Type: " + mSocketType + "accept() failed", e);
-                    break;
-                }
-
-                // If a connection was accepted
-                if (socket != null) {
-                    synchronized (BluetoothService.this) {
-                        switch (mState) {
-                            case LISTEN:
-                            case CONNECTING:
-                                // Situation normal. Start the connected thread.
-                                connected(socket, socket.getRemoteDevice(),
-                                        mSocketType);
-                                break;
-                            case NONE:
-                            case CONNECTED:
-                                // Either not ready or already connected. Terminate new socket.
-                                try {
-                                    socket.close();
-                                } catch (IOException e) {
-                                    Log.e(TAG, "Could not close unwanted socket", e);
-                                }
-                                break;
-                        }
-                    }
-                }
-            }
-            Log.i(TAG, "END mAcceptThread, socket Type: " + mSocketType);
-
-        }
-
-        public void cancel() {
-            Log.d(TAG, "Socket Type" + mSocketType + "cancel " + this);
-            try {
-                mmServerSocket.close();
-            } catch (IOException e) {
-                Log.e(TAG, "Socket Type" + mSocketType + "close() of server failed", e);
-            }
-        }
-    }
-
 
     /**
      * This thread runs while attempting to make an outgoing connection
